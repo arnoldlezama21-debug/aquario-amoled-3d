@@ -1,0 +1,21 @@
+COMO TENER TU APK EN 5 MINUTOS - Acuario AMOLED 3D
+
+OPCION 1 - LA MAS FACIL (Android Studio, sin cuenta):
+1. Abre Android Studio > Open > carpeta LiveWallpaperAcuario
+2. Espera a que sincronice Gradle
+3. Menu: Build > Build App Bundle(s) / APK(s) > Build APK(s)
+4. Cuando termine, dale click a "locate" y ahi esta tu app-debug.apk
+5. Pasalo a tu celular por WhatsApp / USB / Drive e instalalo. Acepta "Instalar de origen desconocido".
+
+OPCION 2 - AUTOMATICA (GitHub, sin instalar nada):
+1. Crea un repo gratis en github.com y sube esta carpeta
+2. Ve a pestaña Actions > Build APK > Run workflow
+3. Cuando termine, descarga el artifact "app-debug" - ahi viene el APK
+4. Instalalo en tu Android.
+
+OPCION 3 - PROBAR AHORA MISMO SIN APK:
+Abre el link del Live Wallpaper web que te hice antes, en Chrome de tu Android:
+Menu de Chrome (3 puntos) > Agregar a pantalla principal / Instalar app
+Queda como app y lo puedes poner en pantalla completa.
+
+NOTA: El APK debug que genera Android Studio es para probar. Para Play Store necesitas el .AAB firmado: Build > Generate Signed App Bundle.
