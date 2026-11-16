@@ -1,0 +1,67 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><style>html,body{margin:0;background:#000;overflow:hidden;height:100%}canvas{display:block} #hint{position:fixed;bottom:18px;width:100%;text-align:center;color:rgba(255,255,255,.45);font-family:sans-serif;font-size:12px;pointer-events:none}</style></head><body><div id="hint">Toca para alimentar • Acuario AMOLED 3D</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Acuario 3D realista - versión Live Wallpaper (negro puro AMOLED)
+let scene=new THREE.Scene(); scene.background=new THREE.Color(0x000000);
+let camera=new THREE.PerspectiveCamera(60, innerWidth/innerHeight, .1, 100); camera.position.set(0,0,9);
+let renderer=new THREE.WebGLRenderer({antialias:true, alpha:false}); renderer.setSize(innerWidth, innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); document.body.appendChild(renderer.domElement);
+scene.add(new THREE.AmbientLight(0x334466,1.2));
+let sun=new THREE.DirectionalLight(0xffffff,1.4); sun.position.set(0,8,4); scene.add(sun);
+let point=new THREE.PointLight(0x00aaff,0.8,20); point.position.set(0,3,3); scene.add(point);
+// Suelo oscuro
+let floor=new THREE.Mesh(new THREE.CircleGeometry(14,32), new THREE.MeshStandardMaterial({color:0x050505, roughness:1})); floor.rotation.x=-Math.PI/2; floor.position.y=-3.2; scene.add(floor);
+let fishes=[];
+function makeFish(color, color2){
+  let g=new THREE.Group();
+  let bodyMat=new THREE.MeshStandardMaterial({color:color, roughness:0.35, metalness:0.35});
+  let body=new THREE.Mesh(new THREE.SphereGeometry(0.55, 24, 18), bodyMat); body.scale.set(1.6,0.85,0.55); g.add(body);
+  let belly=new THREE.Mesh(new THREE.SphereGeometry(0.5, 20, 14), new THREE.MeshStandardMaterial({color:color2, roughness:0.5})); belly.scale.set(1.5,0.6,0.5); belly.position.y=-0.18; g.add(belly);
+  // cola
+  let tailMat=new THREE.MeshStandardMaterial({color:color, transparent:true, opacity:0.85, side:THREE.DoubleSide});
+  let tail=new THREE.Mesh(new THREE.PlaneGeometry(0.7,0.6), tailMat); tail.position.set(-0.95,0,0); g.add(tail);
+  // aletas
+  let fin=new THREE.Mesh(new THREE.PlaneGeometry(0.45,0.35), tailMat); fin.position.set(0,0.45,0); fin.rotation.z=0.2; g.add(fin);
+  // ojos 3D
+  let eyeMat=new THREE.MeshStandardMaterial({color:0x000000, roughness:0.1});
+  [-1,1].forEach(s=>{ let e=new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12), eyeMat); e.position.set(0.65,0.08, s*0.28); g.add(e); let glint=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,8), new THREE.MeshBasicMaterial({color:0xffffff})); glint.position.set(0.70,0.12,s*0.28); g.add(glint); });
+  scene.add(g);
+  return {g, tail, fin, vel:new THREE.Vector3((Math.random()-0.5)*0.02,(Math.random()-0.5)*0.01,(Math.random()-0.5)*0.01), t:Math.random()*10, speed:0.8+Math.random()*0.6};
+}
+let colors=[[0xff6b1a,0xfff2e0],[0xffffff,0xff8c00],[0x1e90ff,0x99e6ff],[0x9b30ff,0xff99ff],[0xffd700,0xfff8a0],[0xff3333,0xffaaaa]];
+for(let i=0;i<10;i++){ let c=colors[i%colors.length]; let f=makeFish(c[0],c[1]); f.g.position.set((Math.random()-0.5)*7,(Math.random()-0.5)*4,(Math.random()-0.5)*3); fishes.push(f); }
+// burbujas 3D
+let bubbles=[]; for(let i=0;i<30;i++){ let b=new THREE.Mesh(new THREE.SphereGeometry(0.03+Math.random()*0.07,10,10), new THREE.MeshStandardMaterial({color:0xaaffff, transparent:true, opacity:0.4, roughness:0})); b.position.set((Math.random()-0.5)*8,-3+Math.random()*6,(Math.random()-0.5)*4); scene.add(b); bubbles.push(b); }
+// plantas 3D simples
+for(let i=0;i<8;i++){ let p=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.08,2+Math.random()*1.5,6), new THREE.MeshStandardMaterial({color:0x0a4d2a})); p.position.set(-4+i*1.1,-2.2,-1+Math.random()*1.5); scene.add(p); }
+// comida
+let foods=[];
+addEventListener('pointerdown', e=>{ let x=(e.clientX/innerWidth-0.5)*7; let y=-(e.clientY/innerHeight-0.5)*4; for(let i=0;i<8;i++){ let f=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,8), new THREE.MeshBasicMaterial({color:0xffaa00})); f.position.set(x+Math.random()*0.8, y, 0); scene.add(f); foods.push(f);} document.getElementById('hint').textContent='¡Los peces van a comer!'; setTimeout(()=>document.getElementById('hint').textContent='Toca para alimentar • Acuario AMOLED 3D',2000); });
+function animate(t){
+  requestAnimationFrame(animate);
+  let time=t*0.001;
+  fishes.forEach(f=>{
+    f.t+=0.016*f.speed;
+    // nado ondulatorio
+    f.g.position.add(f.vel.clone().multiplyScalar(f.speed));
+    f.g.rotation.y = Math.atan2(f.vel.x, f.vel.z);
+    f.g.rotation.z = Math.sin(f.t*2)*0.08;
+    f.g.children[0].scale.y = 0.85 + Math.sin(f.t*6)*0.05;
+    f.tail.rotation.y = Math.sin(f.t*7)*0.5;
+    f.fin.rotation.x = Math.sin(f.t*5)*0.2;
+    // limites del tanque
+    if(f.g.position.x>4||f.g.position.x<-4) f.vel.x*=-1;
+    if(f.g.position.y>2.5||f.g.position.y<-2.5) f.vel.y*=-1;
+    if(f.g.position.z>2||f.g.position.z<-2) f.vel.z*=-1;
+    // ir a comida
+    if(foods.length){ let target=foods[0].position; let dir=target.clone().sub(f.g.position).normalize().multiplyScalar(0.008); f.vel.lerp(dir,0.05); }
+    // cambio aleatorio
+    if(Math.random()<0.005){ f.vel.set((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.02,(Math.random()-0.5)*0.02); }
+  });
+  bubbles.forEach(b=>{ b.position.y+=0.02; b.position.x+=Math.sin(time*2+b.position.y)*0.002; if(b.position.y>3) b.position.y=-3; });
+  foods.forEach((f,i)=>{ f.position.y-=0.01; if(f.position.y<-2.5){ scene.remove(f); foods.splice(i,1); } });
+  point.position.x=Math.sin(time*0.5)*2;
+  renderer.render(scene,camera);
+}
+animate(0);
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+</script></body></html>
